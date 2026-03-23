@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>課文</title>
+  <link rel="stylesheet" href="../assets/css/common.css" />
+  <link rel="stylesheet" href="../assets/css/text-page.css" />
+</head>
+<body class="text-content-page">
+  <div class="text-toolbar">
+    <div class="toolbar-title-block">
+      <h1 id="textTitle">課文</h1>
+      <span id="textMeta" class="page-badge"></span>
+    </div>
+    <div class="actions">
+      <a href="../index.html" style="padding:8px 12px;color:#42a5f5;text-decoration:none;">返回</a>
+      <button type="button" id="toggleViewBtn">單句模式</button>
+      <button type="button" id="fullscreenBtn" class="primary">全螢幕</button>
+    </div>
+  </div>
+
+  <div id="textBody" class="text-body"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/sheet-fetcher.js"></script>
+  <script src="../assets/js/data-loader.js"></script>
+  <script src="../assets/js/text-page.js"></script>
+  <script>PttTextPageInit();</script>
+</body>
+</html>

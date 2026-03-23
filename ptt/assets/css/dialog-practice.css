@@ -1,0 +1,60 @@
+/* 對話練習：J 欄。一次一組，左右滑動切換。無 A/B/C=標題，有 A/B/C=對話 */
+.dialog-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px;
+  min-height: 40vh;
+}
+
+.dialog-slide-inner {
+  width: 100%;
+  max-width: 640px;
+}
+
+.dialog-indicator {
+  margin-top: 1em;
+  color: #677187;
+  font-size: 0.95rem;
+}
+
+.dialog-title {
+  font-size: clamp(1.5rem, 5.5vmin, 2.5rem);
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1.2em;
+  color: #1d2433;
+}
+
+.dialog-content {
+  font-size: clamp(1.4rem, 5vmin, 2.2rem);
+  line-height: 1.8;
+}
+
+.dialog-line {
+  margin: 0.6em 0;
+}
+
+.dialog-speaker {
+  display: inline-block;
+  margin-right: 0.3em;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.dialog-speaker:hover {
+  background: rgba(33, 150, 243, 0.08);
+}
+
+.dialog-line.selected {
+  background: rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(33, 150, 243, 0.35);
+  border-radius: 8px;
+  padding: 4px 10px;
+  margin: 0.4em -10px;
+}
+
+.dialog-text {
+  display: inline;
+}

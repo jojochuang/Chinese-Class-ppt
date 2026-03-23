@@ -1,0 +1,131 @@
+@font-face {
+  font-family: 'BpmfZihiKaiStd';
+  src: url('../../fonts/BpmfZihiKaiStd/BpmfZihiKaiStd-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+body.text-content-page {
+  font-family: 'BpmfZihiKaiStd', 'Microsoft JhengHei', sans-serif;
+  margin: 0;
+  background: #fff;
+  min-height: 100vh;
+}
+
+.text-content-page .text-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.95);
+  border-bottom: 1px solid #e2e7f1;
+}
+
+.text-content-page .text-toolbar .toolbar-title-block {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.text-content-page .text-toolbar h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 5.5vmin, 2.5rem);
+  font-weight: 600;
+}
+
+.text-content-page .text-toolbar .page-badge {
+  color: #677187;
+  font-size: clamp(1.2rem, 4vmin, 2rem);
+}
+
+.text-content-page .text-toolbar .actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.text-content-page .text-toolbar button {
+  font: inherit;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #ccd3e0;
+  background: #fff;
+  color: #1d2433;
+  cursor: pointer;
+}
+
+.text-content-page .text-toolbar button.primary {
+  background: #42a5f5;
+  color: #fff;
+  border-color: #42a5f5;
+}
+
+.text-content-page .text-body {
+  padding: 80px 24px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.text-content-page.fullscreen .text-toolbar {
+  position: fixed;
+}
+
+.text-content-page.fullscreen .text-body {
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* 全文模式 */
+.text-content-page .text-full .sentence {
+  font-size: clamp(1.4rem, 5vmin, 2.2rem);
+  line-height: 1.6;
+  margin: 0.5em 0;
+}
+
+/* 單句模式 */
+.text-content-page .text-slide {
+  display: none;
+  text-align: center;
+  width: 100%;
+}
+
+.text-content-page.slide-mode .text-full {
+  display: none;
+}
+
+.text-content-page.slide-mode .text-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.text-content-page.slide-mode .slide-sentence {
+  font-size: clamp(2rem, 10vmin, 5rem);
+  line-height: 1.4;
+  margin: 0.5em 0;
+}
+
+.text-content-page.slide-mode .slide-translation {
+  font-size: clamp(1rem, 4vmin, 1.8rem);
+  color: #555;
+  margin-top: 0.5em;
+}
+
+.text-content-page.slide-mode .slide-indicator {
+  margin-top: 1em;
+  color: #677187;
+  font-size: 0.95rem;
+}

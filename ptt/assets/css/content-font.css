@@ -1,0 +1,17 @@
+@font-face {
+  font-family: 'BpmfZihiKaiStd';
+  src: url('../../fonts/BpmfZihiKaiStd/BpmfZihiKaiStd-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+body.content-zhuyin .container,
+body.content-zhuyin .card {
+  font-family: 'BpmfZihiKaiStd', 'Microsoft JhengHei', sans-serif;
+}
+
+body.content-zhuyin .card,
+body.content-zhuyin .card .list,
+body.content-zhuyin .card .list li {
+  font-size: clamp(1.4rem, 5vmin, 2.2rem);
+  line-height: 1.6;
+}

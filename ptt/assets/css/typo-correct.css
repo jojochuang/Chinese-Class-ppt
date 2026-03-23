@@ -1,0 +1,126 @@
+@font-face {
+  font-family: "TW-Kai-98";
+  src: url("../../fonts/TW-Kai-98_1.woff2") format("woff2");
+  font-display: swap;
+}
+
+.typo-container {
+  min-height: 44vh;
+  font-family: "TW-Kai-98", "BpmfZihiKaiStd", "Microsoft JhengHei", sans-serif;
+}
+
+.typo-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 44vh;
+  padding: 20px 12px;
+}
+
+.typo-speak-btn {
+  font-family: "TW-Kai-98", "BpmfZihiKaiStd", "Microsoft JhengHei", sans-serif;
+  font-size: 1.05rem;
+  padding: 0.35em 0.8em;
+  border-radius: 999px;
+  border: 1px solid #ccd3e0;
+  background: #eef3ff;
+  color: #1d2433;
+  cursor: pointer;
+  margin-bottom: 0.8rem;
+}
+
+.typo-sentence {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+
+.typo-char-btn {
+  position: relative;
+  font-family: "TW-Kai-98", "BpmfZihiKaiStd", "Microsoft JhengHei", sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.92rem, 7.2vmin, 2.88rem);
+  line-height: 1.5;
+  min-width: 1.7em;
+  padding: 0.1em 0.25em;
+  border-radius: 8px;
+  border: 1px solid #d8deec;
+  background: #fff;
+  color: #1d2433;
+  cursor: pointer;
+}
+
+.typo-char-btn.wrong-char {
+  color: #1d2433;
+  border-color: #d8deec;
+  background: #fff;
+}
+
+.typo-char-btn.fixed-char {
+  color: #1b5e20;
+  border-color: #c8e6c9;
+  background: #e8f5e9;
+}
+
+.typo-picker-zone {
+  width: 100%;
+  max-width: 760px;
+  min-height: 112px; /* 保留選字區高度，避免題目跳動 */
+  margin-top: 2px;
+}
+
+.typo-divider {
+  height: 1px;
+  background: #d7deeb;
+  width: 100%;
+  margin: 6px 0 10px;
+}
+
+.typo-picker {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.typo-picker.show {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.typo-pick-btn {
+  position: relative;
+  font-family: "TW-Kai-98", "BpmfZihiKaiStd", "Microsoft JhengHei", sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.68rem, 6.24vmin, 2.4rem);
+  padding: 0.15em 0.45em;
+  border-radius: 8px;
+  border: 1px solid #ccd3e0;
+  background: #f9fbff;
+  color: #1d2433;
+  cursor: pointer;
+}
+
+.typo-btn-num {
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  font-size: 0.55em;
+  color: #6a7488;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.typo-indicator {
+  margin-top: 1.2em;
+  color: #677187;
+  font-size: 0.95rem;
+}
