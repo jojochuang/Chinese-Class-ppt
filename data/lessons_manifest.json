@@ -1,0 +1,16 @@
+[
+  {
+    "bookId": "demo-book",
+    "lessonId": "L01",
+    "lessonName": "第 1 課",
+    "order": 1,
+    "availableContents": ["text", "vocab", "characters", "charBuild", "sentence", "dialog", "story"]
+  },
+  {
+    "bookId": "demo-book",
+    "lessonId": "L02",
+    "lessonName": "第 2 課",
+    "order": 2,
+    "availableContents": ["text", "vocab", "characters", "charBuild", "sentence", "dialog", "story"]
+  }
+]

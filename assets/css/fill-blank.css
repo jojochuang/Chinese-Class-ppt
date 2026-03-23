@@ -1,0 +1,37 @@
+/* 單題滑動模式 */
+.fill-blank-container { min-height: 40vh; }
+.fill-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  min-height: 40vh;
+}
+.fill-question {
+  font-size: clamp(1.4rem, 5vmin, 2.2rem);
+  line-height: 1.8;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+}
+.fill-indicator {
+  margin-top: 1.5em;
+  color: #677187;
+  font-size: 0.95rem;
+}
+
+.fill-blank-list { list-style: none; padding-left: 0; }
+.fill-blank-list li { margin: 10px 0; line-height: 1.8; }
+
+.fill-blank-item {
+  display: inline-block;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  vertical-align: baseline;
+}
+.fill-blank-item:focus { outline: 2px solid #2f6df6; outline-offset: 2px; }
+
+.fb-content { color: #1d2433; }
+.fill-blank-item.revealed .fb-content { color: #1e88e5; font-weight: 600; }

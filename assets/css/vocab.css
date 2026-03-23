@@ -1,0 +1,40 @@
+/* 語詞頁：單語詞滑動模式，語詞下方顯示圖片 */
+.vocab-container { min-height: 40vh; }
+
+.vocab-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  min-height: 40vh;
+}
+
+.vocab-word {
+  font-size: clamp(2.08rem, 7.8vmin, 3.12rem); /* 1.3x 放大 */
+  line-height: 1.6;
+  text-align: center;
+  font-weight: 600;
+  color: #1d2433;
+}
+
+.vocab-img-wrap {
+  margin-top: 1em;
+  max-width: 90%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.vocab-img {
+  max-width: 100%;
+  max-height: 40vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.vocab-indicator {
+  margin-top: 1.5em;
+  color: #677187;
+  font-size: 0.95rem;
+}
