@@ -42,7 +42,7 @@
   position: relative;
   font-family: "TW-Kai-98", "BpmfZihiKaiStd", "Microsoft JhengHei", sans-serif;
   font-weight: 600;
-  font-size: clamp(1.92rem, 7.2vmin, 2.88rem);
+  font-size: clamp(2rem, 10vmin, 5rem);
   line-height: 1.5;
   min-width: 1.7em;
   padding: 0.1em 0.25em;
@@ -100,7 +100,7 @@
   position: relative;
   font-family: "TW-Kai-98", "BpmfZihiKaiStd", "Microsoft JhengHei", sans-serif;
   font-weight: 600;
-  font-size: clamp(1.68rem, 6.24vmin, 2.4rem);
+  font-size: clamp(2rem, 10vmin, 5rem);
   padding: 0.15em 0.45em;
   border-radius: 8px;
   border: 1px solid #ccd3e0;
