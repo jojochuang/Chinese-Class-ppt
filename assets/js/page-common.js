@@ -200,7 +200,7 @@ function renderCharacters(el, arr) {
     </div>
     <div id="splitGifOverlay" class="stroke-overlay hidden">
       <div class="stroke-overlay-inner">
-        <div class="stroke-cell">
+        <div id="splitGifCell" class="stroke-cell split-gif-cell">
           <img id="splitGifPlayer" src="" alt="" />
           <span id="splitGifFallback" class="stroke-fallback"></span>
         </div>
@@ -212,6 +212,7 @@ function renderCharacters(el, arr) {
   const strokeFallbackEl = el.querySelector("#strokeFallback");
   const indicatorEl = el.querySelector("#strokeIndicator");
   const splitOverlay = el.querySelector("#splitGifOverlay");
+  const splitCell = el.querySelector("#splitGifCell");
   const splitGifEl = el.querySelector("#splitGifPlayer");
   const splitFallbackEl = el.querySelector("#splitGifFallback");
   const splitPauseCanvas = document.createElement("canvas");
@@ -237,14 +238,38 @@ function renderCharacters(el, arr) {
     splitPauseTimer = null;
   }
 
+  function fitSplitCellByRatio(iw, ih) {
+    if (!splitCell || !iw || !ih) return;
+    const maxW = 520;
+    const maxH = 420;
+    const ratio = iw / ih;
+    let w = maxW;
+    let h = maxH;
+    if (ratio >= 1) {
+      h = Math.min(maxH, Math.round(maxW / ratio));
+    } else {
+      w = Math.min(maxW, Math.round(maxH * ratio));
+    }
+    splitCell.style.width = `${w}px`;
+    splitCell.style.height = `${h}px`;
+  }
+
   function captureCurrentFrameToPauseCanvas() {
     try {
+      const iw = splitGifEl.naturalWidth || splitGifEl.width || 320;
+      const ih = splitGifEl.naturalHeight || splitGifEl.height || 320;
+      const cap = 640;
+      if (iw >= ih) {
+        splitPauseCanvas.width = cap;
+        splitPauseCanvas.height = Math.max(1, Math.round(cap * ih / iw));
+      } else {
+        splitPauseCanvas.height = cap;
+        splitPauseCanvas.width = Math.max(1, Math.round(cap * iw / ih));
+      }
       const w = splitPauseCanvas.width;
       const h = splitPauseCanvas.height;
       const ctx = splitPauseCanvas.getContext("2d");
       ctx.clearRect(0, 0, w, h);
-      const iw = splitGifEl.naturalWidth || splitGifEl.width || 1;
-      const ih = splitGifEl.naturalHeight || splitGifEl.height || 1;
       const scale = Math.min(w / iw, h / ih);
       const dw = iw * scale;
       const dh = ih * scale;
@@ -285,6 +310,9 @@ function renderCharacters(el, arr) {
       splitFallbackEl.innerHTML = "";
       splitGifEl.style.display = "";
       splitGifEl.crossOrigin = "anonymous";
+      splitGifEl.onload = () => {
+        fitSplitCellByRatio(splitGifEl.naturalWidth || 1, splitGifEl.naturalHeight || 1);
+      };
       splitGifEl.src = gifUrl + "?t=" + Date.now();
       splitGifEl.alt = ch;
       splitGifEl.onerror = () => {
