@@ -157,6 +157,35 @@ function drawGifFirstFrameToCanvas(canvas, gifUrl, onDone) {
   img.src = gifUrl;
 }
 
+function loadGifStillData(gifUrl, onDone) {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    try {
+      const iw = Math.max(1, img.naturalWidth || 1);
+      const ih = Math.max(1, img.naturalHeight || 1);
+      const maxSide = 900;
+      const scale = Math.min(1, maxSide / Math.max(iw, ih));
+      const w = Math.max(1, Math.round(iw * scale));
+      const h = Math.max(1, Math.round(ih * scale));
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = c.toDataURL("image/png");
+      if (typeof onDone === "function") onDone({ ok: true, dataUrl, w, h, ratio: w / h });
+    } catch (_) {
+      if (typeof onDone === "function") onDone({ ok: false });
+    }
+  };
+  img.onerror = () => {
+    if (typeof onDone === "function") onDone({ ok: false });
+  };
+  img.src = gifUrl;
+}
+
 function renderCharacters(el, arr) {
   if (!arr || !arr.length) {
     el.innerHTML = "<div class='muted'>此課尚未填資料。</div>";
@@ -216,6 +245,7 @@ function renderCharacters(el, arr) {
   const splitGifEl = el.querySelector("#splitGifPlayer");
   const splitFallbackEl = el.querySelector("#splitGifFallback");
   const thumbDataMap = new Map();
+  const stillDataMap = new Map();
   const thumbRatioMap = new Map();
   let splitPlayTimer = null;
   let splitPauseTimer = null;
@@ -264,7 +294,7 @@ function renderCharacters(el, arr) {
     splitFallbackEl.style.display = "";
     splitFallbackEl.textContent = "";
     splitFallbackEl.innerHTML = "";
-    const dataUrl = thumbDataMap.get(ch);
+    const dataUrl = stillDataMap.get(ch) || thumbDataMap.get(ch);
     if (dataUrl) {
       splitFallbackEl.innerHTML = `<img src="${dataUrl}" alt="${htmlEscape(ch)} 靜態縮圖" class="stroke-still-img" />`;
     } else {
@@ -357,6 +387,12 @@ function renderCharacters(el, arr) {
           thumbRatioMap.set(ch, 1);
         }
       } catch (_) {}
+
+      // 另外載入高解析靜態幀，供放大層停住 3 秒使用，避免糊掉
+      loadGifStillData(getWordGifUrl(ch), (ret) => {
+        if (!ret || !ret.ok) return;
+        stillDataMap.set(ch, ret.dataUrl);
+      });
     });
 
     thumbEl.addEventListener("click", (e) => {
