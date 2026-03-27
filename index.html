@@ -3,16 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>教學分頁啟動器</title>
+  <title>教學投影片</title>
   <link rel="stylesheet" href="assets/css/common.css" />
 </head>
 <body>
   <div class="container">
     <div class="toolbar">
-      <h1>教學分頁啟動器</h1>
-      <span class="pill">從試算表即時讀取</span>
+      <h1>教學投影片</h1>
     </div>
-    <p class="muted">選課本、課文與內容後，可直接開新分頁。</p>
 
     <div class="card">
       <div class="row">
@@ -24,21 +22,8 @@
           <label for="lessonSelect">課文/課次</label>
           <select id="lessonSelect"></select>
         </div>
-        <div class="field">
-          <label for="contentSelect">內容</label>
-          <select id="contentSelect"></select>
-        </div>
       </div>
-      <div class="row" style="margin-top:12px;">
-        <button id="openCurrentBtn">開啟目前內容</button>
-        <button class="secondary" id="openAllBtn">開啟本課全部內容</button>
-      </div>
-      <div id="warnBox" class="warn" style="display:block; min-height:36px;"></div>
-    </div>
-
-    <div class="card">
-      <h2>本課可用內容</h2>
-      <ul id="availableList" class="list"></ul>
+      <div id="contentButtons" class="row" style="margin-top:12px;"></div>
     </div>
   </div>
 

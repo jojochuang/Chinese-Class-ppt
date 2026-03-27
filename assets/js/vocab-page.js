@@ -173,6 +173,7 @@
     const sp = new URLSearchParams(window.location.search);
     const book = sp.get("book") || "";
     const lesson = sp.get("lesson") || "";
+    document.title = lesson ? `${lesson} 語詞` : "語詞";
     const titleEl = document.querySelector(".container h1");
     const metaEl = byId("metaText");
     const bodyEl = byId("contentBody");

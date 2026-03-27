@@ -113,7 +113,11 @@ button {
   color: #fff;
   cursor: pointer;
 }
-button.secondary { background: #6f42c1; }
+button.secondary {
+  background: #eef3ff;
+  color: #2e3a59;
+  border: 1px solid #dbe5ff;
+}
 button:hover { opacity: 0.92; }
 ul { margin: 0; padding-left: 20px; }
 li { margin: 4px 0; }
@@ -139,4 +143,16 @@ li { margin: 4px 0; }
   padding: 14px;
   margin-top: 10px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* 教學內容頁（非課文全文）固定畫面，避免左右滑時頁面上下抖動 */
+body.content-zhuyin {
+  height: 100vh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* 內容區預設以水平手勢為主 */
+body.content-zhuyin #contentBody {
+  touch-action: pan-x;
 }

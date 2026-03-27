@@ -69,9 +69,19 @@
     }
   }
 
+  function updateScrollLock() {
+    const isSlide = document.body.classList.contains("slide-mode");
+    // 課文頁：單句模式固定畫面；全文模式允許上下捲動
+    document.body.style.overflow = isSlide ? "hidden" : "";
+    document.body.style.overscrollBehavior = isSlide ? "none" : "";
+    const textSlide = byId("textSlide");
+    if (textSlide) textSlide.style.touchAction = isSlide ? "pan-x" : "auto";
+  }
+
   async function init() {
     const book = (new URLSearchParams(window.location.search)).get("book") || "";
     const lesson = (new URLSearchParams(window.location.search)).get("lesson") || "";
+    document.title = lesson ? `${lesson} 課文` : "課文";
     const titleEl = byId("textTitle");
     const metaEl = byId("textMeta");
     const bodyEl = byId("textBody");
@@ -106,9 +116,11 @@
         toggleBtn.addEventListener("click", () => {
           document.body.classList.toggle("slide-mode", toggleBtn.textContent === "單句模式");
           toggleBtn.textContent = document.body.classList.contains("slide-mode") ? "全文模式" : "單句模式";
+          updateScrollLock();
           render();
         });
       }
+      updateScrollLock();
       if (fullscreenBtn) fullscreenBtn.addEventListener("click", toggleFullscreen);
     } catch (e) {
       if (bodyEl) bodyEl.innerHTML = "<div class='warn'>載入失敗：" + (e && e.message ? e.message : e) + "</div>";

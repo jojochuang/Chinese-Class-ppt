@@ -212,6 +212,7 @@
     const sp = new URLSearchParams(window.location.search);
     const book = sp.get("book") || "";
     const lesson = sp.get("lesson") || "";
+    document.title = lesson ? `${lesson} 字音字形改錯` : "字音字形改錯";
     const titleEl = byId("pageTitle") || document.querySelector(".container h1");
     const metaEl = byId("metaText");
     const bodyEl = byId("contentBody");

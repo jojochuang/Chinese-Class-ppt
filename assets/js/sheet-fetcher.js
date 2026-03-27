@@ -1,6 +1,12 @@
 /**
  * 從 Google 試算表即時讀取並解析為課次結構
- * A=第幾課, B=頁碼, C=課文, D=翻譯, E=生字, F=語詞, G=週數, H=CREC生字, I=填空, J=對話練習, K=連連看上排, L=連連看下排, N=同組字音字形, O=語詞/短句
+ *
+ * 舊版欄位：
+ * A=第幾課, B=頁碼, C=課文, D=翻譯, E=生字, F=語詞, G=週數, H=CREC生字,
+ * I=填空, J=對話練習, K=連連看上排, L=連連看下排, N=同組字音字形, O=語詞/短句
+ *
+ * 新版（相容）：
+ * A=課次代碼, B=第幾課, C=頁碼, D=課文 ...（其餘整體右移一欄）
  */
 
 (function () {
@@ -46,25 +52,36 @@
   function groupIntoLessons(rows) {
     const lessons = [];
     let current = null;
+    const header = rows[0] || [];
+    const firstCol = (header[0] || "").trim();
+    const hasLessonCodeCol = /課次/.test(firstCol) && /代碼/.test(firstCol);
+    const base = hasLessonCodeCol ? 1 : 0;
+
+    function col(row, idx) {
+      return ((row[idx] || "") + "").trim();
+    }
+
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
-      const a = (row[0] || "").trim();
-      const b = (row[1] || "").trim();
-      const c = (row[2] || "").trim();
-      const translation = (row[3] || "").trim();
-      const d = (row[4] || "").trim();
-      const e = (row[5] || "").trim();
-      const crec = (row[7] || "").trim();
-      const h = (row[8] || "").trim();
-      const iVal = (row[9] || "").trim();
-      const k = (row[10] || "").trim();
-      const l = (row[11] || "").trim();
-      const n = (row[13] || "").trim();
-      const o = (row[14] || "").trim();
+      const lessonCode = hasLessonCodeCol ? col(row, 0) : "";
+      const a = col(row, 0 + base);   // 第幾課（課名）
+      const b = col(row, 1 + base);   // 頁碼
+      const c = col(row, 2 + base);   // 課文
+      const translation = col(row, 3 + base);
+      const d = col(row, 4 + base);   // 生字
+      const e = col(row, 5 + base);   // 語詞
+      const crec = col(row, 7 + base); // CREC生字
+      const h = col(row, 8 + base);   // 填空
+      const iVal = col(row, 9 + base); // 對話練習
+      const k = col(row, 10 + base);  // 連連看上排
+      const l = col(row, 11 + base);  // 連連看下排
+      const n = col(row, 13 + base);  // 同組字音字形
+      const o = col(row, 14 + base);  // 語詞/短句
 
       if (a) {
         current = {
-          lessonId: String(i + 1),
+          lessonId: lessonCode || String(i + 1),
+          lessonCode: lessonCode || "",
           lessonName: a,
           page: b,
           text: c ? [c] : [],

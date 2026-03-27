@@ -124,10 +124,37 @@ function renderDialogPractice(el, arr) {
   slideEl.addEventListener("mouseup", (e) => { handleSwipe(e.clientX - startX); });
 }
 
-/** 生字：一字一行，點擊顯示筆順動圖（twpen.com） */
+/** 生字：按鈕顯示筆順網動圖；分合 GIF 另外放縮圖，點擊縮圖才放大播放 */
 function charToHex(ch) {
   if (!ch || ch.length === 0) return "";
   return ch.codePointAt(0).toString(16);
+}
+
+function getWordGifUrl(ch) {
+  return "https://jojochuang.github.io/Words-picture/" + encodeURIComponent(ch) + ".gif";
+}
+
+function drawGifFirstFrameToCanvas(canvas, gifUrl, onDone) {
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const scale = Math.min(w / img.naturalWidth, h / img.naturalHeight);
+    const dw = img.naturalWidth * scale;
+    const dh = img.naturalHeight * scale;
+    const dx = (w - dw) / 2;
+    const dy = (h - dh) / 2;
+    ctx.drawImage(img, dx, dy, dw, dh);
+    if (typeof onDone === "function") onDone(true);
+  };
+  img.onerror = () => {
+    if (typeof onDone === "function") onDone(false);
+  };
+  img.src = gifUrl;
 }
 
 function renderCharacters(el, arr) {
@@ -143,8 +170,20 @@ function renderCharacters(el, arr) {
   const mid = Math.ceil(chars.length / 2);
   const leftChars = chars.slice(0, mid);
   const rightChars = chars.slice(mid);
-  const leftHtml = leftChars.map((ch) => `<li><button type="button" class="char-item" data-char="${htmlEscape(ch)}">${htmlEscape(ch)}</button></li>`).join("");
-  const rightHtml = rightChars.map((ch) => `<li><button type="button" class="char-item" data-char="${htmlEscape(ch)}">${htmlEscape(ch)}</button></li>`).join("");
+  function charLineHtml(ch, isRight) {
+    return `
+      <li>
+        <div class="char-line ${isRight ? "char-line-right" : ""}">
+          <button type="button" class="char-item" data-char="${htmlEscape(ch)}">${htmlEscape(ch)}</button>
+          <div class="char-gif-thumb ${isRight ? "char-gif-thumb-right" : ""}" data-char="${htmlEscape(ch)}" aria-label="${htmlEscape(ch)} 動圖縮圖" title="${htmlEscape(ch)} 分合動圖">
+            <canvas class="char-gif-canvas" width="54" height="54"></canvas>
+          </div>
+        </div>
+      </li>
+    `;
+  }
+  const leftHtml = leftChars.map((ch) => charLineHtml(ch, false)).join("");
+  const rightHtml = rightChars.map((ch) => charLineHtml(ch, true)).join("");
   el.innerHTML = `
     <div class="char-columns">
       <ul class="list char-list char-list-left">${leftHtml}</ul>
@@ -159,67 +198,224 @@ function renderCharacters(el, arr) {
         <span id="strokeIndicator" class="stroke-indicator"></span>
       </div>
     </div>
+    <div id="splitGifOverlay" class="stroke-overlay hidden">
+      <div class="stroke-overlay-inner">
+        <div class="stroke-cell">
+          <img id="splitGifPlayer" src="" alt="" />
+          <span id="splitGifFallback" class="stroke-fallback"></span>
+        </div>
+      </div>
+    </div>
   `;
-  const overlay = el.querySelector("#strokeOverlay");
-  const gifEl = el.querySelector("#strokeGif");
-  const fallbackEl = el.querySelector("#strokeFallback");
+  const strokeOverlay = el.querySelector("#strokeOverlay");
+  const strokeGifEl = el.querySelector("#strokeGif");
+  const strokeFallbackEl = el.querySelector("#strokeFallback");
   const indicatorEl = el.querySelector("#strokeIndicator");
+  const splitOverlay = el.querySelector("#splitGifOverlay");
+  const splitGifEl = el.querySelector("#splitGifPlayer");
+  const splitFallbackEl = el.querySelector("#splitGifFallback");
+  const splitPauseCanvas = document.createElement("canvas");
+  splitPauseCanvas.width = 320;
+  splitPauseCanvas.height = 320;
+  splitPauseCanvas.className = "stroke-still-canvas";
+  const thumbDataMap = new Map();
+  let splitPlayTimer = null;
+  let splitPauseTimer = null;
+  const PLAY_MS = 2400;
+  const PAUSE_MS = 3000;
   let strokeIdx = 0;
-  let justSwiped = false;
+  let justSwipedStroke = false;
+  let justSwipedSplit = false;
   const SWIPE_THRESHOLD = 50;
-  let startX = 0;
+  let startXStroke = 0;
+  let startXSplit = 0;
+
+  function clearSplitLoopTimers() {
+    if (splitPlayTimer) clearTimeout(splitPlayTimer);
+    if (splitPauseTimer) clearTimeout(splitPauseTimer);
+    splitPlayTimer = null;
+    splitPauseTimer = null;
+  }
+
+  function captureCurrentFrameToPauseCanvas() {
+    try {
+      const w = splitPauseCanvas.width;
+      const h = splitPauseCanvas.height;
+      const ctx = splitPauseCanvas.getContext("2d");
+      ctx.clearRect(0, 0, w, h);
+      const iw = splitGifEl.naturalWidth || splitGifEl.width || 1;
+      const ih = splitGifEl.naturalHeight || splitGifEl.height || 1;
+      const scale = Math.min(w / iw, h / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const dx = (w - dw) / 2;
+      const dy = (h - dh) / 2;
+      ctx.drawImage(splitGifEl, dx, dy, dw, dh);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function showSplitOverlayStill(ch) {
+    splitGifEl.style.display = "none";
+    splitFallbackEl.style.display = "";
+    splitFallbackEl.textContent = "";
+    splitFallbackEl.innerHTML = "";
+    const ok = captureCurrentFrameToPauseCanvas();
+    if (ok) {
+      splitFallbackEl.appendChild(splitPauseCanvas);
+      return;
+    }
+    const dataUrl = thumbDataMap.get(ch);
+    if (dataUrl) {
+      splitFallbackEl.innerHTML = `<img src="${dataUrl}" alt="${htmlEscape(ch)} 靜態縮圖" class="stroke-still-img" />`;
+    } else {
+      splitFallbackEl.textContent = ch;
+    }
+  }
+
+  function playSplitGifLoop(ch) {
+    clearSplitLoopTimers();
+    const gifUrl = getWordGifUrl(ch);
+
+    const playOnce = () => {
+      splitFallbackEl.style.display = "none";
+      splitFallbackEl.textContent = "";
+      splitFallbackEl.innerHTML = "";
+      splitGifEl.style.display = "";
+      splitGifEl.crossOrigin = "anonymous";
+      splitGifEl.src = gifUrl + "?t=" + Date.now();
+      splitGifEl.alt = ch;
+      splitGifEl.onerror = () => {
+        splitGifEl.style.display = "none";
+        splitFallbackEl.textContent = ch + "（GIF 無法載入）";
+        splitFallbackEl.style.display = "";
+        clearSplitLoopTimers();
+      };
+
+      splitPlayTimer = setTimeout(() => {
+        showSplitOverlayStill(ch);
+        splitPauseTimer = setTimeout(() => {
+          if (!splitOverlay.classList.contains("hidden")) playOnce();
+        }, PAUSE_MS);
+      }, PLAY_MS);
+    };
+
+    playOnce();
+  }
 
   function showStrokeAt(idx) {
     strokeIdx = Math.max(0, Math.min(idx, chars.length - 1));
     const ch = chars[strokeIdx];
     const hex = charToHex(ch);
-    gifEl.style.display = "";
-    fallbackEl.style.display = "none";
-    fallbackEl.textContent = "";
-    gifEl.src = "https://www.twpen.com/bishun-animation/" + hex + "-stroke-order.gif";
-    gifEl.alt = ch;
-    gifEl.onerror = () => {
-      gifEl.style.display = "none";
-      fallbackEl.textContent = ch + "（筆順圖無法載入）";
-      fallbackEl.style.display = "";
+    strokeGifEl.style.display = "";
+    strokeFallbackEl.style.display = "none";
+    strokeFallbackEl.textContent = "";
+    strokeFallbackEl.innerHTML = "";
+    strokeGifEl.src = "https://www.twpen.com/bishun-animation/" + hex + "-stroke-order.gif";
+    strokeGifEl.alt = ch;
+    strokeGifEl.onerror = () => {
+      strokeGifEl.style.display = "none";
+      strokeFallbackEl.textContent = ch + "（筆順圖無法載入）";
+      strokeFallbackEl.style.display = "";
     };
     if (indicatorEl) indicatorEl.textContent = (strokeIdx + 1) + " / " + chars.length;
   }
+
+  // 先渲染分合縮圖：有 GIF 才顯示；無 GIF 時右欄保留空位、左欄隱藏
+  el.querySelectorAll(".char-gif-thumb").forEach((thumbEl) => {
+    const ch = thumbEl.getAttribute("data-char") || "";
+    const canvas = thumbEl.querySelector(".char-gif-canvas");
+    drawGifFirstFrameToCanvas(canvas, getWordGifUrl(ch), (ok) => {
+      if (!ok || !canvas) {
+        if (thumbEl.classList.contains("char-gif-thumb-right")) {
+          thumbEl.classList.add("placeholder");
+        } else {
+          thumbEl.classList.add("hidden");
+        }
+        return;
+      }
+      try {
+        thumbDataMap.set(ch, canvas.toDataURL("image/png"));
+      } catch (_) {}
+    });
+
+    thumbEl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (thumbEl.classList.contains("hidden") || thumbEl.classList.contains("placeholder")) return;
+      splitOverlay.classList.remove("hidden");
+      playSplitGifLoop(ch);
+    });
+  });
 
   el.querySelectorAll(".char-item").forEach((btn, idx) => {
     btn.addEventListener("click", () => {
       strokeIdx = idx;
       showStrokeAt(strokeIdx);
-      overlay.classList.remove("hidden");
+      strokeOverlay.classList.remove("hidden");
     });
   });
 
-  function handleSwipe(dx) {
+  function handleStrokeSwipe(dx) {
     if (Math.abs(dx) < SWIPE_THRESHOLD || chars.length <= 1) return false;
-    justSwiped = true;
+    justSwipedStroke = true;
     if (dx > 0) {
       strokeIdx = (strokeIdx - 1 + chars.length) % chars.length;
     } else {
       strokeIdx = (strokeIdx + 1) % chars.length;
     }
     showStrokeAt(strokeIdx);
-    setTimeout(() => { justSwiped = false; }, 350);
+    setTimeout(() => { justSwipedStroke = false; }, 350);
     return true;
   }
-  overlay.addEventListener("touchstart", (e) => {
-    if (e.touches && e.touches.length) startX = e.touches[0].clientX;
+  function handleSplitSwipe(dx) {
+    if (Math.abs(dx) < SWIPE_THRESHOLD || chars.length <= 1) return false;
+    justSwipedSplit = true;
+    if (dx > 0) {
+      strokeIdx = (strokeIdx - 1 + chars.length) % chars.length;
+    } else {
+      strokeIdx = (strokeIdx + 1) % chars.length;
+    }
+    const ch = chars[strokeIdx];
+    playSplitGifLoop(ch);
+    if (indicatorEl) indicatorEl.textContent = (strokeIdx + 1) + " / " + chars.length;
+    setTimeout(() => { justSwipedSplit = false; }, 350);
+    return true;
+  }
+
+  strokeOverlay.addEventListener("touchstart", (e) => {
+    if (e.touches && e.touches.length) startXStroke = e.touches[0].clientX;
   }, { passive: true });
-  overlay.addEventListener("touchend", (e) => {
+  strokeOverlay.addEventListener("touchend", (e) => {
     const t = (e.changedTouches && e.changedTouches.length) ? e.changedTouches[0] : null;
-    if (t && handleSwipe(t.clientX - startX)) e.preventDefault();
+    if (t && handleStrokeSwipe(t.clientX - startXStroke)) e.preventDefault();
   }, { passive: false });
-  overlay.addEventListener("mousedown", (e) => { startX = e.clientX; });
-  overlay.addEventListener("mouseup", (e) => {
-    handleSwipe(e.clientX - startX);
+  strokeOverlay.addEventListener("mousedown", (e) => { startXStroke = e.clientX; });
+  strokeOverlay.addEventListener("mouseup", (e) => {
+    handleStrokeSwipe(e.clientX - startXStroke);
   });
-  overlay.addEventListener("click", () => {
-    if (justSwiped) return;
-    overlay.classList.add("hidden");
+
+  splitOverlay.addEventListener("touchstart", (e) => {
+    if (e.touches && e.touches.length) startXSplit = e.touches[0].clientX;
+  }, { passive: true });
+  splitOverlay.addEventListener("touchend", (e) => {
+    const t = (e.changedTouches && e.changedTouches.length) ? e.changedTouches[0] : null;
+    if (t && handleSplitSwipe(t.clientX - startXSplit)) e.preventDefault();
+  }, { passive: false });
+  splitOverlay.addEventListener("mousedown", (e) => { startXSplit = e.clientX; });
+  splitOverlay.addEventListener("mouseup", (e) => {
+    handleSplitSwipe(e.clientX - startXSplit);
+  });
+
+  strokeOverlay.addEventListener("click", () => {
+    if (justSwipedStroke) return;
+    strokeOverlay.classList.add("hidden");
+  });
+  splitOverlay.addEventListener("click", () => {
+    if (justSwipedSplit) return;
+    clearSplitLoopTimers();
+    splitOverlay.classList.add("hidden");
   });
 }
 
@@ -276,6 +472,9 @@ function renderFillBlank(el, arr) {
 async function initContentPage(contentKey) {
   const book = q("book");
   const lesson = q("lesson");
+  const labels = (window.PttRouter && window.PttRouter.contentLabel) || {};
+  const label = labels[contentKey] || contentKey || "內容";
+  document.title = lesson ? `${lesson} ${label}` : label;
   const titleEl = document.querySelector(".container h1") || document.getElementById("pageTitle");
   const metaEl = document.getElementById("metaText") || document.getElementById("lessonMeta");
 

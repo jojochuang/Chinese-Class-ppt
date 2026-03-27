@@ -21,9 +21,7 @@ function renderOptions(select, arr, valueKey, labelKey) {
 async function initLauncher() {
   const bookSel = byId("bookSelect");
   const lessonSel = byId("lessonSelect");
-  const contentSel = byId("contentSelect");
-  const available = byId("availableList");
-  const warn = byId("warnBox");
+  const contentButtons = byId("contentButtons");
   if (!bookSel || !lessonSel) return;
 
   const books = await loadBooks();
@@ -45,37 +43,29 @@ async function initLauncher() {
   function refreshContents() {
     const row = currentLessons().find((x) => x.lessonId === lessonSel.value);
     const list = (row && row.availableContents) ? row.availableContents : [];
-    if (contentSel) contentSel.innerHTML = list.map((k) => `<option value="${k}">${contentLabels[k] || k}</option>`).join("");
-    if (available) available.innerHTML = list.map((k) => `<li>${contentLabels[k] || k}</li>`).join("");
+    if (contentButtons) {
+      contentButtons.innerHTML = list.map((k) => (
+        `<button type="button" class="secondary content-open-btn" data-content="${k}">${contentLabels[k] || k}</button>`
+      )).join("");
+      Array.from(contentButtons.querySelectorAll(".content-open-btn")).forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-content");
+          const url = buildPageUrl(key, bookSel.value, lessonSel.value);
+          if (!url) return;
+          if (!openOne(url)) {
+            alert("瀏覽器阻擋新分頁，請允許此網站開啟彈出視窗。");
+          }
+        });
+      });
+    }
   }
 
   bookSel.addEventListener("change", refreshLessons);
   lessonSel.addEventListener("change", refreshContents);
 
-  byId("openCurrentBtn").addEventListener("click", () => {
-    if (warn) warn.textContent = "";
-    const url = buildPageUrl(contentSel.value, bookSel.value, lessonSel.value);
-    if (!url) return;
-    if (!openOne(url) && warn) {
-      warn.textContent = "瀏覽器阻擋新分頁，請允許此網站開啟彈出視窗。";
-    }
-  });
-
-  byId("openAllBtn").addEventListener("click", () => {
-    if (warn) warn.textContent = "";
-    const row = currentLessons().find((x) => x.lessonId === lessonSel.value);
-    const list = (row && row.availableContents) ? row.availableContents : [];
-    const urls = list.map((k) => buildPageUrl(k, bookSel.value, lessonSel.value)).filter(Boolean);
-    const ok = openMany(urls);
-    if (ok < urls.length && warn) {
-      warn.textContent = "部分分頁可能被阻擋，請允許彈出視窗後再試一次。";
-    }
-  });
-
   refreshLessons();
 }
 
 initLauncher().catch((e) => {
-  const warn = document.getElementById("warnBox");
-  if (warn) warn.textContent = "初始化失敗：" + (e && e.message ? e.message : e);
+  alert("初始化失敗：" + (e && e.message ? e.message : e));
 });

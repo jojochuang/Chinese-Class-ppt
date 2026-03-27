@@ -13,6 +13,15 @@
 .char-list li {
   margin: 12px 0;
 }
+.char-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.char-line-right {
+  width: 100%;
+  justify-content: flex-end;
+}
 .char-item {
   font: inherit;
   font-size: clamp(1.4rem, 5vmin, 2.2rem);
@@ -27,6 +36,28 @@
 .char-item:hover {
   background: #eaf2ff;
   border-color: #42a5f5;
+}
+.char-gif-thumb {
+  width: 54px;
+  height: 54px;
+  border: 1px solid #d7deeb;
+  border-radius: 8px;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.char-gif-thumb.hidden {
+  display: none;
+}
+.char-gif-thumb.placeholder {
+  visibility: hidden;
+}
+.char-gif-canvas {
+  width: 54px;
+  height: 54px;
+  display: block;
 }
 
 .stroke-overlay {
@@ -69,6 +100,21 @@
 .stroke-fallback {
   font-size: 1.2rem;
   color: #677187;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.stroke-still-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.stroke-still-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 .stroke-indicator {
   color: rgba(255, 255, 255, 0.9);

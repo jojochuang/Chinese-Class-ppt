@@ -142,6 +142,7 @@
   async function init() {
     const book = (new URLSearchParams(window.location.search)).get("book") || "";
     const lesson = (new URLSearchParams(window.location.search)).get("lesson") || "";
+    document.title = lesson ? `${lesson} 填空` : "填空";
     const titleEl = byId("pageTitle");
     const metaEl = byId("metaText");
     const bodyEl = byId("contentBody");
