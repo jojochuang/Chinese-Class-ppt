@@ -215,11 +215,8 @@ function renderCharacters(el, arr) {
   const splitCell = el.querySelector("#splitGifCell");
   const splitGifEl = el.querySelector("#splitGifPlayer");
   const splitFallbackEl = el.querySelector("#splitGifFallback");
-  const splitPauseCanvas = document.createElement("canvas");
-  splitPauseCanvas.width = 320;
-  splitPauseCanvas.height = 320;
-  splitPauseCanvas.className = "stroke-still-canvas";
   const thumbDataMap = new Map();
+  const thumbRatioMap = new Map();
   let splitPlayTimer = null;
   let splitPauseTimer = null;
   const PLAY_MS = 2400;
@@ -238,48 +235,28 @@ function renderCharacters(el, arr) {
     splitPauseTimer = null;
   }
 
-  function fitSplitCellByRatio(iw, ih) {
-    if (!splitCell || !iw || !ih) return;
-    const maxW = 520;
-    const maxH = 420;
-    const ratio = iw / ih;
+  function fitSplitCellByRatio(ratio) {
+    if (!splitCell || !ratio || !isFinite(ratio)) return;
+    const maxW = Math.min(Math.round(window.innerWidth * 0.82), 520);
+    const maxH = Math.min(Math.round(window.innerHeight * 0.72), 520);
     let w = maxW;
     let h = maxH;
     if (ratio >= 1) {
-      h = Math.min(maxH, Math.round(maxW / ratio));
+      h = Math.max(220, Math.round(w / ratio));
+      if (h > maxH) {
+        h = maxH;
+        w = Math.round(h * ratio);
+      }
     } else {
-      w = Math.min(maxW, Math.round(maxH * ratio));
+      h = maxH;
+      w = Math.max(220, Math.round(h * ratio));
+      if (w > maxW) {
+        w = maxW;
+        h = Math.round(w / ratio);
+      }
     }
     splitCell.style.width = `${w}px`;
     splitCell.style.height = `${h}px`;
-  }
-
-  function captureCurrentFrameToPauseCanvas() {
-    try {
-      const iw = splitGifEl.naturalWidth || splitGifEl.width || 320;
-      const ih = splitGifEl.naturalHeight || splitGifEl.height || 320;
-      const cap = 640;
-      if (iw >= ih) {
-        splitPauseCanvas.width = cap;
-        splitPauseCanvas.height = Math.max(1, Math.round(cap * ih / iw));
-      } else {
-        splitPauseCanvas.height = cap;
-        splitPauseCanvas.width = Math.max(1, Math.round(cap * iw / ih));
-      }
-      const w = splitPauseCanvas.width;
-      const h = splitPauseCanvas.height;
-      const ctx = splitPauseCanvas.getContext("2d");
-      ctx.clearRect(0, 0, w, h);
-      const scale = Math.min(w / iw, h / ih);
-      const dw = iw * scale;
-      const dh = ih * scale;
-      const dx = (w - dw) / 2;
-      const dy = (h - dh) / 2;
-      ctx.drawImage(splitGifEl, dx, dy, dw, dh);
-      return true;
-    } catch (_) {
-      return false;
-    }
   }
 
   function showSplitOverlayStill(ch) {
@@ -287,11 +264,6 @@ function renderCharacters(el, arr) {
     splitFallbackEl.style.display = "";
     splitFallbackEl.textContent = "";
     splitFallbackEl.innerHTML = "";
-    const ok = captureCurrentFrameToPauseCanvas();
-    if (ok) {
-      splitFallbackEl.appendChild(splitPauseCanvas);
-      return;
-    }
     const dataUrl = thumbDataMap.get(ch);
     if (dataUrl) {
       splitFallbackEl.innerHTML = `<img src="${dataUrl}" alt="${htmlEscape(ch)} 靜態縮圖" class="stroke-still-img" />`;
@@ -310,9 +282,6 @@ function renderCharacters(el, arr) {
       splitFallbackEl.innerHTML = "";
       splitGifEl.style.display = "";
       splitGifEl.crossOrigin = "anonymous";
-      splitGifEl.onload = () => {
-        fitSplitCellByRatio(splitGifEl.naturalWidth || 1, splitGifEl.naturalHeight || 1);
-      };
       splitGifEl.src = gifUrl + "?t=" + Date.now();
       splitGifEl.alt = ch;
       splitGifEl.onerror = () => {
@@ -366,12 +335,34 @@ function renderCharacters(el, arr) {
       }
       try {
         thumbDataMap.set(ch, canvas.toDataURL("image/png"));
+        const ctx = canvas.getContext("2d");
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let minX = canvas.width, minY = canvas.height, maxX = -1, maxY = -1;
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            const a = img[(y * canvas.width + x) * 4 + 3];
+            if (a > 8) {
+              if (x < minX) minX = x;
+              if (y < minY) minY = y;
+              if (x > maxX) maxX = x;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+        if (maxX >= minX && maxY >= minY) {
+          const bw = Math.max(1, maxX - minX + 1);
+          const bh = Math.max(1, maxY - minY + 1);
+          thumbRatioMap.set(ch, bw / bh);
+        } else {
+          thumbRatioMap.set(ch, 1);
+        }
       } catch (_) {}
     });
 
     thumbEl.addEventListener("click", (e) => {
       e.stopPropagation();
       if (thumbEl.classList.contains("hidden") || thumbEl.classList.contains("placeholder")) return;
+      fitSplitCellByRatio(thumbRatioMap.get(ch) || 1);
       splitOverlay.classList.remove("hidden");
       playSplitGifLoop(ch);
     });
