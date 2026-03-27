@@ -392,6 +392,10 @@ function renderCharacters(el, arr) {
       loadGifStillData(getWordGifUrl(ch), (ret) => {
         if (!ret || !ret.ok) return;
         stillDataMap.set(ch, ret.dataUrl);
+        if (ret.ratio && isFinite(ret.ratio) && ret.ratio > 0) {
+          // 優先使用 GIF 原始寬高比（上下型會是偏高）
+          thumbRatioMap.set(ch, ret.ratio);
+        }
       });
     });
 
