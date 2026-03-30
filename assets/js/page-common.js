@@ -17,7 +17,7 @@ function renderArray(el, arr) {
   el.innerHTML = `<ul class="list">${arr.map((x) => `<li>${htmlEscape(x)}</li>`).join("")}</ul>`;
 }
 
-/** 對話練習：J 欄。無 A/B/C 標示=標題（開始新組），有 A/B/C=對話。一次一組，左右滑動切換 */
+/** 對話練習：J 欄。無 A/B/C 標示=標題（開始新組），有 A/B/C=對話。一頁一句／一頁一標題，左右滑動 */
 const DIALOG_SPEAKER = { A: "👦", B: "👧", C: "👴", D: "👩" };
 const SWIPE_THRESHOLD = 50;
 
@@ -34,33 +34,51 @@ function parseDialogGroups(arr) {
       groups.push(current);
     } else if (current) {
       current.lines.push(line);
+    } else {
+      current = { title: "", lines: [line] };
+      groups.push(current);
     }
   }
   return groups.filter((g) => g.lines.length > 0 || g.title);
 }
 
-function renderDialogGroup(group) {
-  const dialogueHtml = (group.lines || [])
-    .map((line) => {
-      const m = line.match(/^([ABCD])[：:\s、]*(.*)$/);
-      if (m) {
-        const speaker = m[1];
-        const text = m[2].trim();
-        const emoji = DIALOG_SPEAKER[speaker] || speaker;
-        return `<div class="dialog-line"><span class="dialog-speaker" tabindex="0" role="button">${emoji}</span><span class="dialog-text">${htmlEscape(text)}</span></div>`;
-      }
-      return `<div class="dialog-line"><span class="dialog-text">${htmlEscape(line)}</span></div>`;
-    })
-    .join("");
-  return `
-    <div class="dialog-title">${htmlEscape(group.title || "")}</div>
-    <div class="dialog-content">${dialogueHtml || ""}</div>
-  `;
+/** 一頁一句：標題與每句對白各一張投影片 */
+function buildDialogLineSlides(groups) {
+  const slides = [];
+  for (const g of groups) {
+    const t = (g.title || "").trim();
+    if (t) slides.push({ kind: "title", text: t });
+    for (const line of g.lines || []) {
+      const raw = String(line || "").trim();
+      if (!raw) continue;
+      slides.push({ kind: "utterance", raw });
+    }
+  }
+  return slides;
+}
+
+function renderDialogSlideHtml(slide) {
+  if (slide.kind === "title") {
+    return `<div class="slide-sentence dialog-slide-only">${htmlEscape(slide.text)}</div>`;
+  }
+  const m = slide.raw.match(/^([ABCD])[：:\s、]*(.*)$/);
+  if (m) {
+    const speaker = m[1];
+    const text = m[2].trim();
+    const emoji = DIALOG_SPEAKER[speaker] || speaker;
+    return `
+      <div class="dialog-utterance-slide">
+        <span class="dialog-utterance-emoji" aria-hidden="true">${emoji}</span>
+        <div class="slide-sentence dialog-slide-only">${htmlEscape(text)}</div>
+      </div>`;
+  }
+  return `<div class="slide-sentence dialog-slide-only">${htmlEscape(slide.raw)}</div>`;
 }
 
 function renderDialogPractice(el, arr) {
   const groups = parseDialogGroups(arr);
-  if (!groups.length) {
+  const slides = buildDialogLineSlides(groups);
+  if (!slides.length) {
     el.innerHTML = "<div class='muted'>此課尚無對話練習資料。</div>";
     return;
   }
@@ -68,8 +86,8 @@ function renderDialogPractice(el, arr) {
   const slideEl = document.createElement("div");
   slideEl.className = "dialog-slide";
   slideEl.innerHTML = `
-    <div class="dialog-slide-inner">${renderDialogGroup(groups[0])}</div>
-    <div class="dialog-indicator">1 / ${groups.length}</div>
+    <div class="dialog-slide-inner"></div>
+    <div class="dialog-indicator"></div>
   `;
   el.innerHTML = "";
   el.appendChild(slideEl);
@@ -77,39 +95,21 @@ function renderDialogPractice(el, arr) {
   const indicatorEl = slideEl.querySelector(".dialog-indicator");
 
   function update() {
-    slideIndex = Math.max(0, Math.min(slideIndex, groups.length - 1));
-    innerEl.innerHTML = renderDialogGroup(groups[slideIndex]);
-    if (indicatorEl) indicatorEl.textContent = (slideIndex + 1) + " / " + groups.length;
+    slideIndex = Math.max(0, Math.min(slideIndex, slides.length - 1));
+    innerEl.innerHTML = renderDialogSlideHtml(slides[slideIndex]);
+    if (indicatorEl) indicatorEl.textContent = (slideIndex + 1) + " / " + slides.length;
   }
 
-  innerEl.addEventListener("click", (e) => {
-    const speakerSpan = e.target.closest(".dialog-speaker");
-    if (!speakerSpan) return;
-    const lineEl = speakerSpan.closest(".dialog-line");
-    if (!lineEl) return;
-    innerEl.querySelectorAll(".dialog-line.selected").forEach((el) => el.classList.remove("selected"));
-    lineEl.classList.add("selected");
-  });
-  innerEl.addEventListener("keydown", (e) => {
-    const speakerSpan = e.target.closest(".dialog-speaker");
-    if (!speakerSpan) return;
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      const lineEl = speakerSpan.closest(".dialog-line");
-      if (lineEl) {
-        innerEl.querySelectorAll(".dialog-line.selected").forEach((el) => el.classList.remove("selected"));
-        lineEl.classList.add("selected");
-      }
-    }
-  });
+  update();
 
   let startX = 0;
   function handleSwipe(dx) {
+    if (slides.length <= 1) return;
     if (Math.abs(dx) < SWIPE_THRESHOLD) return;
     if (dx > 0) {
-      slideIndex = (slideIndex - 1 + groups.length) % groups.length;
+      slideIndex = (slideIndex - 1 + slides.length) % slides.length;
     } else {
-      slideIndex = (slideIndex + 1) % groups.length;
+      slideIndex = (slideIndex + 1) % slides.length;
     }
     update();
   }
