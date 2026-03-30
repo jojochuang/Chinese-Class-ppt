@@ -3,8 +3,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 16px;
-  min-height: 40vh;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 16px;
+  min-height: 60vh;
 }
 
 .dialog-slide-inner {
@@ -16,6 +18,12 @@
   margin-top: 1em;
   color: #677187;
   font-size: 0.95rem;
+}
+
+.dialog-slide .slide-sentence {
+  font-size: clamp(2rem, 10vmin, 5rem);
+  line-height: 1.4;
+  margin: 0.5em 0;
 }
 
 .dialog-title {

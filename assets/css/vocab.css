@@ -11,8 +11,8 @@
 }
 
 .vocab-word {
-  font-size: clamp(2.08rem, 7.8vmin, 3.12rem); /* 1.3x 放大 */
-  line-height: 1.6;
+  font-size: clamp(2rem, 10vmin, 5rem);
+  line-height: 1.4;
   text-align: center;
   font-weight: 600;
   color: #1d2433;
