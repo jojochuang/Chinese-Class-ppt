@@ -1,4 +1,4 @@
-/* 對話練習：J 欄。一次一組，左右滑動切換。無 A/B/C=標題，有 A/B/C=對話 */
+/* 對話練習：J 欄。一頁一句／一頁一標題，左右滑動。無 A/B/C=標題，有 A/B/C=對話 */
 .dialog-slide {
   display: flex;
   flex-direction: column;
@@ -24,6 +24,24 @@
   font-size: clamp(2rem, 10vmin, 5rem);
   line-height: 1.4;
   margin: 0.5em 0;
+}
+
+.dialog-slide-only {
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.dialog-utterance-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35em;
+  width: 100%;
+}
+
+.dialog-utterance-emoji {
+  font-size: clamp(1.75rem, 7vmin, 3.5rem);
+  line-height: 1;
 }
 
 .dialog-title {
